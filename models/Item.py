@@ -19,8 +19,8 @@ class ItemModel():
     def json(self):
         return {'name':self.name,'price':self.price}
 
-
-    def findItemByName(self):
+    @classmethod
+    def findItemByName(cls,name):
         connection = sqlite3.connect('data.db')
         cursor = connection.cursor()
 
@@ -29,16 +29,17 @@ class ItemModel():
         row = result.fetchone()
         connection.close()
 
-        if row is not None:
-            return {"item": {'name': row[0], 'price': row[1]}}
+        if row :
+            return cls(*row)
 
 
     def insert(self):
+        print('in insert()',self.name)
         connection = sqlite3.connect('data.db')
         cursor = connection.cursor()
 
-        query = "insert into items values (?,?)"
-        cursor.execute(query, (item['name'], item['price']))
+        query = "insert into items values(?,?)"
+        cursor.execute(query, (self.name,self.price))
 
         connection.commit()
         connection.close()
@@ -49,4 +50,4 @@ class ItemModel():
         cursor = connection.cursor()
 
         upd_query = "update items set price=? where name=?"
-        cursor.execute(upd_query, (item['price'], item['name']))
+        cursor.execute(upd_query, (self.price, self.name))

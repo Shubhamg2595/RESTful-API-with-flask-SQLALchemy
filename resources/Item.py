@@ -16,7 +16,7 @@ class Item(Resource):
     def get(self,name):
         item=ItemModel.findItemByName(name)
         if item:
-            return item
+            return item.json()
         return {"message":"item not found"},404
 
 
@@ -26,13 +26,15 @@ class Item(Resource):
 
         data=Item.parser.parse_args()
 
-        item={'name':name,'price':data['price']}
+        item=ItemModel(name,data['price'])
+        # print(item.name)
         try:
-            ItemModel.insert(item)
+            print(item.name)
+            item.insert()
         except:
             return {"message":"An error occured inserting the item"},500
 
-        return item,201
+        return item.json(),201
 
 
 
@@ -55,20 +57,19 @@ class Item(Resource):
         #first we check if item exist or not
         data=Item.parser.parse_args()
         item=ItemModel.findItemByName(name)
-        updated_item={'name':name,'price':data['price']}
+        updated_item=ItemModel(name,data['price'])
 
         if item is None:
             try:
                 updated_item.insert()
-                ItemModel.insert(updated_item)
             except:
                 return {"message":"an error occured while inserting the data"},500
         else:
             try:
-                ItemModel.update(updated_item) #item is actually a dictionary that has an updated method...
+                updated_item.update() #item is actually a dictionary that has an updated method...
             except:
                 return {"message":"An error occured while updating the item"},500
-        return updated_item
+        return updated_item.json()
 
 
 
