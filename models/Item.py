@@ -1,16 +1,22 @@
 '''
+REASON I AM EXTENDING ITEMMODEL WITH DB.MODEL AND
+SAME WITH USERMODEL IS TO TELL SQLALCHEMY ENTITY
+TO CREATE A MAPPING BETWEEN OBJECTS OF ITEMMODEL
+AND USERMODEL AND THE DATABASE
 
-in this model class,
- i will add methods,that do not actually belong to the Resource class: ITEM
-
-
-
+in simply way, i am simply telling ORM SQLALCHEMY
+that objects of itemmodel and usermodel are the one
+that should be mapped to the database.
 '''
 
-import sqlite3
+from db import db
 
+class ItemModel(db.Model):
 
-class ItemModel():
+    __tablename__='items'
+    id=db.Column(db.Integer,primary_key=True)
+    name=db.Column(db.String(80))
+    price=db.Column(db.Float(precision=2))
 
     def __init__(self,name,price):
         self.name=name
@@ -21,33 +27,55 @@ class ItemModel():
 
     @classmethod
     def findItemByName(cls,name):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
+        # ''''NEW CODE USING SQL ALCHEMY'''
+        return cls.query.filter_by(name=name).first()
 
-        query = "select * from items where name=?"
-        result = cursor.execute(query, (name,))
-        row = result.fetchone()
-        connection.close()
+        # 'above code simply returns a itemModel Object'
 
-        if row :
-            return cls(*row)
-
-
-    def insert(self):
-        print('in insert()',self.name)
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-
-        query = "insert into items values(?,?)"
-        cursor.execute(query, (self.name,self.price))
-
-        connection.commit()
-        connection.close()
+        # '''CODE BEFORE SQL ALCHEMY'''
+        # connection = sqlite3.connect('data.db')
+        # cursor = connection.cursor()
+        #
+        # query = "select * from items where name=?"
+        # result = cursor.execute(query, (name,))
+        # row = result.fetchone()
+        # connection.close()
+        #
+        # if row :
+        #     return cls(*row)
 
 
-    def update(self):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
+    def save_to_db(self):
+        # ''''NEW CODE USING SQL ALCHEMY'''
+        db.session.add(self)
+        db.session.commit()
 
-        upd_query = "update items set price=? where name=?"
-        cursor.execute(upd_query, (self.price, self.name))
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+        # '''ONE MAJOR ADVANTAGE OF ABOVE LINE IS THAT
+        # SQL ALCHEMY IS ACTUALLY PERFORMING UPSERTING
+        # WHAT THIS MEANS IS THAT IF DATA IS  NOT PRESENT
+        # IN DB,ALCHEMY WILL INSERT IT,OTHERWISE IT WILL UPDATE THE EXISTING
+        # DATA
+        #
+        # WHAT THIS MEANS IS THAT  WE DONT ACTUALLY NEED A UPDATE()
+        # METHOD SEPARATELY....
+        # '''
+        #
+        # '''what above code means is that
+        #  using alchemy we are dealing directly with
+        #  ITEMMMODEL object, we  can simply insert that
+        #  object in the database....
+        #  '''
+        # 'INSERTION CODE BEFORE SQLALCHEMY'
+        # print('in insert()',self.name)
+        # connection = sqlite3.connect('data.db')
+        # cursor = connection.cursor()
+        #
+        # query = "insert into items values(?,?)"
+        # cursor.execute(query, (self.name,self.price))
+        #
+        # connection.commit()
+        # connection.close()
+

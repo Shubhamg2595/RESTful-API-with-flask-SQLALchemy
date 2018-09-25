@@ -29,8 +29,8 @@ class Item(Resource):
         item=ItemModel(name,data['price'])
         # print(item.name)
         try:
-            print(item.name)
-            item.insert()
+            # print(item.name)
+            item.save_to_db()
         except:
             return {"message":"An error occured inserting the item"},500
 
@@ -40,37 +40,25 @@ class Item(Resource):
 
 
     def delete(self,name):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
+        item = Item.findItemByName(name)
+        if item:
+            item.delete_from_db()
 
-        query = "Delete from items where name=?"
-        cursor.execute(query,(name,))
+        return {'message':'item deleted'}
 
-        connection.commit()
-        connection.close()
-
-        return {'message':'items deleted'}
-
-#USING reqparse to make sure ,we can parse the input data in put() method properly.
-    #reqparse also helps in making sure that only variable json can be passed and not any other value
     def put(self,name):
-        #first we check if item exist or not
         data=Item.parser.parse_args()
+
         item=ItemModel.findItemByName(name)
-        updated_item=ItemModel(name,data['price'])
 
         if item is None:
-            try:
-                updated_item.insert()
-            except:
-                return {"message":"an error occured while inserting the data"},500
+            item=ItemModel(name,data['price'])
         else:
-            try:
-                updated_item.update() #item is actually a dictionary that has an updated method...
-            except:
-                return {"message":"An error occured while updating the item"},500
-        return updated_item.json()
+            item.price=data['price']
 
+        item.save_to_db()
+
+        return item.json()
 
 
 
