@@ -17,14 +17,12 @@ class UserRegistration(Resource):
         if UserModel.findByUsername(data['username']):
             return {"message":"User Already Exists"},400
 
+        # user=UserModel(data['username'],data['password'])
+        '''modifying above code'''
+        user=UserModel(**data)
+        user.save_to_db()
 
-        connection=sqlite3.connect('data.db')
-        cursor=connection.cursor()
-        query="insert into users values(null,?,?)"
-
-        cursor.execute(query,(data['username'],data['password']))
-
-        connection.commit()
-        connection.close()
+        # since data is actually working as a
+        # dictionary, we  simply unpacked it
 
         return {"message":"user created successfully"}

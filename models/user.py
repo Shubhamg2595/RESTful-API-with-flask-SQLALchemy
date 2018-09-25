@@ -1,55 +1,40 @@
 import sqlite3
+from db import db
 
-'reason i put user class in here and not in resource folder is bcoz this user class is not actually inheriting Resource' \
-'and neither api responds to this class,' \
-'since api does not deal with it ,it is not a resoource'
+class UserModel(db.Model):
+    """next thing we need to do is tell SQLALchemy
+    the tablenames ,where these models are going to
+    be stored
+    """
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80))
+    password = db.Column(db.String(80))
 
-"""This class is simply a helper class, that we use to retieve data more easily]
+    # '''
+    # we also need to tell sqlalchemy about the columns
+    # that our table will contain/or contains
+    # '''
 
-A model is an INTERNAL REPRESENTATION OF AN ENTITY
-whereas 
-REsource is an EXTERNAL REPRESENTATION OF AN ENTITY"""
-class UserModel:
-    def __init__(self,_id,username,password):
-        self.id=_id
+    def __init__(self,username,password):
         self.username=username
         self.password=password
+    # REASON I REMOvED ID from init method is bcoz
+    # id is autoincrementing and so whenever a new object
+    # of user is created,id is automatically assigned to that
+    # id
+
     @classmethod
     def findByUsername(cls,username):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-        query="select * from users where username=?"
-        resultset=cursor.execute(query,(username,))
-        #reason we passed username in '()' with a comma (,) is to tell
-        # python that we actually want our result to be a tuple
-
-        #NOW TO FECTH ONLY ONE ROW FROM RESULSET
-        row=resultset.fetchone()
-
-        if row: #only works if row got some data
-            # user=cls(row[0],row[1],row[2])
-            user=cls(*row)
-        else:
-            user=None
-        return user
+        # '''NEW CODE USING SQL ALCHEMY'''
+        return cls.query.filter_by(username=username).first()
 
     @classmethod
     def findByUseId(cls,_id):
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-        query = "select * from users where id=?"
-        resultset = cursor.execute(query, (_id,))
-        # reason we passed username in '()' with a comma (,) is to tell
-        # python that we actually want our result to be a tuple
-        # NOW TO FECTH ONLY ONE ROW FROM RESULSET
-        row = resultset.fetchone()
-        if row:  # only works if row got some data
-            # user=cls(row[0],row[1],row[2])
-            user = cls(*row)
-        else:
-            user = None
+        return cls.query.filter_by(id=_id).first()
 
-
-    'now make appropriate changes to security class with appropriate methods'
+    def save_to_db(self):
+        db.session.add(self)
+        db.session.commit()
 
 
