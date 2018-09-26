@@ -6,8 +6,9 @@ from models.Item import ItemModel
 class Item(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('price', type=float, required=True, help="this field cannot be left blank")
+    parser.add_argument('store_id', type=int, required=True, help="tvery item needs a store_id")
 
-# '''instead of fetching items data in get() method, we will create a classmethod() to ' \
+    # '''instead of fetching items data in get() method, we will create a classmethod() to ' \
 # 'do the same thing and then we will this class method in our get() ,post() and other methods as per requirement '''
 
 
@@ -26,7 +27,9 @@ class Item(Resource):
 
         data=Item.parser.parse_args()
 
-        item=ItemModel(name,data['price'])
+        # item=ItemModel(name,data['price'],data['store_id'])
+        '''way2'''
+        item = ItemModel(name, **data)
         # print(item.name)
         try:
             # print(item.name)
@@ -52,7 +55,9 @@ class Item(Resource):
         item=ItemModel.findItemByName(name)
 
         if item is None:
-            item=ItemModel(name,data['price'])
+            # item=ItemModel(name,data['price'],data['store_id'])
+            '''way2'''
+            item=ItemModel(name,**data)
         else:
             item.price=data['price']
 
@@ -64,16 +69,4 @@ class Item(Resource):
 
 class ItemList(Resource):
     def get(self):
-        connection=sqlite3.connect('data.db')
-        cursor=connection.cursor()
-
-        fetchAll_query="select * from items"
-        result=cursor.execute(fetchAll_query)
-
-        items=[]
-        for row in result:
-            items.append({'name':row[0],'price':row[1]})
-
-        connection.close()
-
-        return {'ITEM_LIST':items}
+        return {'items':list(map(lambda x:x.json(),ItemModel.query.all()))}
